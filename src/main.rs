@@ -26,13 +26,23 @@ struct Board {
 }
 
 
+
+fn place_white_pawns(board:  Board){
+    for i in 0..8{
+        board.squares[1][i] = Some(PieceOnSquare{
+            piece: Piece::Pawn,
+            color: Color::White,
+        });
+    }
+}
+
 fn empty_board()-> Board{
     Board{
         squares: [[None; 8]; 8],
     }
 }
-
 fn main() {
     let board= empty_board();
+    place_white_pawns(&mut board);
     println!("{:#?}", board);
 }
