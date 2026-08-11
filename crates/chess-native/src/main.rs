@@ -23,4 +23,16 @@ fn main() {
 
     move_piece(&mut board, (1, 4), (4, 4));
     println!("{:#?}", board);
+
+    // --- test is_square_attacked ---
+
+    // Clear a path so black's rook at (7,0) can see down the board.
+    // Remove the black pawn in front of it at (6,0).
+    board.squares[6][0] = None;
+
+    let attacked = is_square_attacked(&board, (5, 0), Color::Black);
+    println!("Is (5,0) attacked by Black? {}", attacked); // expect true — rook sees straight down the a-file
+
+    let not_attacked = is_square_attacked(&board, (5, 4), Color::Black);
+    println!("Is (5,4) attacked by Black? {}", not_attacked); // expect false — nothing lines up there
 }

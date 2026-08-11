@@ -37,20 +37,20 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
             }
 
             // En passant capture
-            // if row == 4 && col > 0 {
-            //     if let Some(piece) = board.squares[row][col - 1] {
-            //         if piece.color == Color::Black {
-            //             moves.push((row + 1, col - 1));
-            //         }
-            //     }
-            // }
-            // if row == 4 && col < 7 {
-            //     if let Some(piece) = board.squares[row][col + 1] {
-            //         if piece.color == Color::Black {
-            //             moves.push((row + 1, col + 1));
-            //         }
-            //     }
-            // }
+            if row == 4 && col > 0 {
+                if let Some(piece) = board.squares[row][col - 1] {
+                    if piece.color == Color::Black {
+                        moves.push((row + 1, col - 1));
+                    }
+                }
+            }
+            if row == 4 && col < 7 {
+                if let Some(piece) = board.squares[row][col + 1] {
+                    if piece.color == Color::Black {
+                        moves.push((row + 1, col + 1));
+                    }
+                }
+            }
         }
         Color::Black => {
             if row > 0 && board.squares[row - 1][col].is_none() {
@@ -73,20 +73,20 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
                     }
                 }
             }
-            // if row == 3 && col > 0 {
-            //     if let Some(piece) = board.squares[row][col - 1] {
-            //         if piece.color == Color::White {
-            //             moves.push((row - 1, col - 1));
-            //         }
-            //     }
-            // }
-            // if row == 3 && col < 7 {
-            //     if let Some(piece) = board.squares[row][col + 1] {
-            //         if piece.color == Color::White {
-            //             moves.push((row - 1, col + 1));
-            //         }
-            //     }
-            // }
+            if row == 3 && col > 0 {
+                if let Some(piece) = board.squares[row][col - 1] {
+                    if piece.color == Color::White {
+                        moves.push((row - 1, col - 1));
+                    }
+                }
+            }
+            if row == 3 && col < 7 {
+                if let Some(piece) = board.squares[row][col + 1] {
+                    if piece.color == Color::White {
+                        moves.push((row - 1, col + 1));
+                    }
+                }
+            }
         }
     }
     moves
@@ -122,4 +122,54 @@ pub fn knight_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(
         }
     }
     moves
+}
+
+pub fn king_moves(board: &Board, c_pos:(usize, usize), color: Color) -> Vec<(usize, usize)> {
+    let mut moves = Vec::new();
+    let (row, col) = c_pos;
+    let directions = [
+        (1, 0),  (1, 1),  (1, -1),
+        (0, 1),  (0, -1),
+        (-1, 0), (-1, 1), (-1, -1),
+    ];
+
+    for (dr, dc) in directions {
+        let new_row = (row as i32) + dr;
+        let new_col = (col as i32) + dc;
+
+        if new_row >= 0 && new_row < 8 && new_col >= 0 && new_col < 8 {
+            let new_pos = (new_row as usize, new_col as usize);
+            if let Some(piece) = board.squares[new_pos.0][new_pos.1] {
+                if piece.color != color {
+                    moves.push(new_pos);
+                }
+            } else {
+                moves.push(new_pos);
+            }
+        }
+    }
+    moves
+}
+
+pub fn is_square_attacked(board: &Board, square: (usize, usize), color: Color) -> bool {
+    for row in 0..8 {
+        for col in 0..8 {
+            if let Some(piece) = board.squares[row][col] {
+                if piece.color == color {
+                    let moves = match piece.piece {
+                        Piece::Pawn => pawn_moves(board, (row, col), color),
+                        Piece::Knight => knight_moves(board, (row, col), color),
+                        Piece::Bishop => bishop_moves(board, (row, col), color),
+                        Piece::Rook => rook_moves(board, (row, col), color),
+                        Piece::Queen => queen_moves(board, (row, col), color),
+                        Piece::King => king_moves(board, (row, col), color),
+                    };
+                    if moves.contains(&target) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
 }
