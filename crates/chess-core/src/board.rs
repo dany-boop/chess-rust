@@ -1,6 +1,8 @@
+use crate::types::{Color, Piece, PieceOnSquare};
+
 #[derive(Debug, Clone, Copy)]
-struct Board {
-    squares: [[Option<PieceOnSquare>; 8]; 8],
+pub struct Board {
+    pub squares: [[Option<PieceOnSquare>; 8]; 8],
 }
 
 pub fn empty_board() -> Board {

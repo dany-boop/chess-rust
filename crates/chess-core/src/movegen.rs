@@ -1,3 +1,6 @@
+use crate::board::Board;
+use crate::types::Color;
+
 pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)) {
     let piece = board.squares[from.0][from.1];
 

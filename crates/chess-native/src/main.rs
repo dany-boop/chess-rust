@@ -1,4 +1,6 @@
-use crate::crates::chess_cores::{Board, Color, PieceOnSquare};
+use chess_core::board::*;
+use chess_core::movegen::*;
+use chess_core::types::*;
 
 // fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)){
 //     let piece = board.squares[from.0][from.1];

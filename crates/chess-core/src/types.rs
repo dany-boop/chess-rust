@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Copy)]
-enum Piece {
+pub enum Piece {
     King,
     Queen,
     Rook,
@@ -9,13 +9,13 @@ enum Piece {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-enum Color {
+pub enum Color {
     White,
     Black,
 }
 
 #[derive(Debug, Clone, Copy)]
-struct PieceOnSquare {
-    piece: Piece,
-    color: Color,
+pub struct PieceOnSquare {
+    pub piece: Piece,
+    pub color: Color,
 }

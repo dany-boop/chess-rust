@@ -1,0 +1,7 @@
+[package]
+name = "chess-native"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chess-core = { path = "../chess-core" }
