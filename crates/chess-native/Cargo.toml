@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 chess-core = { path = "../chess-core" }
+eframe = "0.36.1"
