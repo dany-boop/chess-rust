@@ -1,11 +1,36 @@
-use crate::board::Board;
+use crate::board::{Board, Move};
 use crate::types::{Color, Piece};
 
 pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)) {
     let piece = board.squares[from.0][from.1];
+    let (from_row, from_col) = from;
+    let (to_row, to_col) = to;
 
-    board.squares[to.0][to.1] = piece;
-    board.squares[from.0][from.1] = None;
+    let piece_name = match &board.squares[from_row][from_col] {
+        Some(square_data) => match square_data.piece {
+            crate::types::Piece::Pawn => "Pawn".to_string(),
+            crate::types::Piece::Rook => "Rook".to_string(),
+            crate::types::Piece::Knight => "Knight".to_string(),
+            crate::types::Piece::Bishop => "Bishop".to_string(),
+            crate::types::Piece::Queen => "Queen".to_string(),
+            crate::types::Piece::King => "King".to_string(),
+        },
+        None => return,
+    };
+
+    let completed_move = Move {
+        from,
+        to,
+        piece_type: piece_name,
+    };
+
+    board.history.push(completed_move);
+
+    let piece = board.squares[from_row][from_col].take();
+    board.squares[to_row][to_col] = piece;
+
+    // board.squares[to.0][to.1] = piece;
+    // board.squares[from.0][from.1] = None;
 }
 
 pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(usize, usize)> {
@@ -15,6 +40,7 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
         Color::White => {
             if row < 7 && board.squares[row + 1][col].is_none() {
                 moves.push((row + 1, col));
+
                 if row == 1 && board.squares[row + 2][col].is_none() {
                     moves.push((row + 2, col));
                 }
@@ -55,6 +81,7 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
         Color::Black => {
             if row > 0 && board.squares[row - 1][col].is_none() {
                 moves.push((row - 1, col));
+
                 if row == 6 && board.squares[row - 2][col].is_none() {
                     moves.push((row - 2, col));
                 }
@@ -148,13 +175,18 @@ pub fn knight_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(
     moves
 }
 
-pub fn king_moves(board: &Board, c_pos:(usize, usize), color: Color) -> Vec<(usize, usize)> {
+pub fn king_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(usize, usize)> {
     let mut moves = Vec::new();
     let (row, col) = c_pos;
     let directions = [
-        (1, 0),  (1, 1),  (1, -1),
-        (0, 1),  (0, -1),
-        (-1, 0), (-1, 1), (-1, -1),
+        (1, 0),
+        (1, 1),
+        (1, -1),
+        (0, 1),
+        (0, -1),
+        (-1, 0),
+        (-1, 1),
+        (-1, -1),
     ];
 
     for (dr, dc) in directions {
@@ -241,12 +273,12 @@ pub fn is_square_attacked(board: &Board, square: (usize, usize), color: Color) -
                 if piece.color == color {
                     let moves = match piece.piece {
                         // Piece::Pawn => pawn_moves(board, (row, col), color),
-                        Piece::Pawn => pawn_attacks((row, col), color),
-                        Piece::Knight => knight_moves(board, (row, col), color),
-                        Piece::Bishop => bishop_moves(board, (row, col), color),
-                        Piece::Rook => rook_moves(board, (row, col), color),
-                        Piece::Queen => queen_moves(board, (row, col), color),
-                        Piece::King => king_moves(board, (row, col), color),
+                        Piece::Pawn => pawn_attacks((row, col), piece.color),
+                        Piece::Knight => knight_moves(board, (row, col), piece.color),
+                        Piece::Bishop => bishop_moves(board, (row, col), piece.color),
+                        Piece::Rook => rook_moves(board, (row, col), piece.color),
+                        Piece::Queen => queen_moves(board, (row, col), piece.color),
+                        Piece::King => king_moves(board, (row, col), piece.color),
                     };
                     if moves.contains(&square) {
                         return true;
@@ -258,3 +290,54 @@ pub fn is_square_attacked(board: &Board, square: (usize, usize), color: Color) -
     false
 }
 
+fn find_king(board: &Board, color: Color) -> (usize, usize) {
+    for r in 0..8 {
+        for c in 0..8 {
+            if let Some(p) = board.squares[r][c] {
+                if p.piece == Piece::King && p.color == color {
+                    return (r, c);
+                }
+            }
+        }
+    }
+    (0, 0)
+}
+
+pub fn legal_moves_for(board: &Board, pos: (usize, usize)) -> Vec<(usize, usize)> {
+    let Some(piece_on_square) = board.squares[pos.0][pos.1] else {
+        return Vec::new();
+    };
+
+    let moving_color = piece_on_square.color;
+    let enemy_color = match moving_color {
+        Color::Black => Color::White,
+        Color::White => Color::Black,
+    };
+
+    let pseudo_moves = match piece_on_square.piece {
+        Piece::Pawn => pawn_moves(board, pos, moving_color),
+        Piece::Knight => knight_moves(board, pos, moving_color),
+        Piece::Bishop => bishop_moves(board, pos, moving_color),
+        Piece::Rook => rook_moves(board, pos, moving_color),
+        Piece::Queen => queen_moves(board, pos, moving_color),
+        Piece::King => king_moves(board, pos, moving_color),
+    };
+
+    pseudo_moves
+        .into_iter()
+        .filter(|&target_pos| {
+            let mut temp_board = board.clone();
+
+            let piece = temp_board.squares[pos.0][pos.1].take();
+            temp_board.squares[target_pos.0][target_pos.1] = piece;
+
+            let king_pos = if piece_on_square.piece == Piece::King {
+                target_pos
+            } else {
+                find_king(&temp_board, moving_color)
+            };
+
+            !is_square_attacked(&temp_board, king_pos, enemy_color)
+        })
+        .collect::<Vec<_>>() 
+}
