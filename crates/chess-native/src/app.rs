@@ -1,7 +1,9 @@
 use chess_core::{
     board::{
-        Board, empty_board, place_black_pawns, place_black_pieces, place_white_pawns, place_white_pieces,
-    }, movegen::{legal_moves_for, move_piece},
+        empty_board, place_black_pawns, place_black_pieces, place_white_pawns, place_white_pieces,
+        Board,
+    },
+    movegen::{legal_moves_for, move_piece},
 };
 use eframe::egui::{self};
 
@@ -31,19 +33,33 @@ impl eframe::App for ChessApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ui, |ui| {
             ui.heading("Chess Fuxk Urself");
-            if let Some(clicked) = board_widget::draw_board(ui, &self.board, self.selected) {
+
+            let legal_moves = match self.selected {
+                Some(from) => legal_moves_for(&self.board, from),
+                None => vec![],
+            };
+
+            if let Some(clicked) =
+                board_widget::draw_board(ui, &self.board, self.selected, &legal_moves)
+            {
                 match self.selected {
                     None => {
                         if self.board.squares[clicked.0][clicked.1].is_some() {
                             self.selected = Some(clicked);
+                        } else {
+                            self.selected = None;
                         }
                     }
+
                     Some(from) => {
-                        let legal = legal_moves_for(&self.board, from);
-                        if legal.contains(&clicked){
+                        if  legal_moves.contains(&clicked) {
                             move_piece(&mut self.board, from, clicked);
+                            self.selected = None;
+                        } else if self.board.squares[clicked.0][clicked.1].is_some() {
+                            self.selected = Some(clicked);
+                        } else {
+                            self.selected = None;
                         }
-                        self.selected = None;
                     }
                 }
             }

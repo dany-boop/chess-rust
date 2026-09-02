@@ -1,9 +1,7 @@
 use chess_core::{
     board::{
-        empty_board, place_black_pawns, place_black_pieces, place_white_pawns, place_white_pieces,
-        Board,
-    },
-    types::Piece::{self, Rook},
+        Board, empty_board, place_black_pawns, place_black_pieces, place_white_pawns, place_white_pieces,
+    }, movegen::legal_moves_for, types::Piece::{self, Rook},
 };
 use eframe::egui::{self, vec2, Rect, Sense};
 
@@ -28,6 +26,7 @@ pub fn draw_board(
     ui: &mut egui::Ui,
     board: &Board,
     selected: Option<(usize, usize)>,
+    legal_moves: &[(usize, usize)],
 ) -> Option<(usize, usize)> {
     let mut clicked_square = None;
     let square_size: f32 = 50.0;
@@ -44,15 +43,22 @@ pub fn draw_board(
             } else {
                 dark
             };
+            
             let square_rect = Rect::from_min_size(
                 ui.min_rect().min + vec2(col as f32 * square_size, row as f32 * square_size),
                 vec2(square_size, square_size),
             );
             let response = ui.allocate_rect(square_rect, Sense::click());
+            
             if response.clicked() {
                 clicked_square = Some((row, col))
             }
             ui.painter().rect_filled(square_rect, 0.0, square_color);
+
+            if legal_moves.contains(&(row, col)) {
+                ui.painter().circle(square_rect.center(), 0.4, highlight, egui::Stroke::new(1.0, egui::Color32::BLACK));
+            }
+
             if let Some(piece_on_square) = board.squares[row][col] {
                 let letter = match piece_on_square.piece {
                     Piece::Pawn => "P",
