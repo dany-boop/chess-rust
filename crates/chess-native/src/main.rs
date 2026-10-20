@@ -1,7 +1,4 @@
-use chess_core::board::*;
-use chess_core::movegen::*;
 use chess_native::app::ChessApp;
-use chess_native::board_widget::BoardStruct;
 use eframe::egui;
 
 

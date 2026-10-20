@@ -1,36 +1,42 @@
 use crate::board::{Board, Move};
 use crate::types::{Color, Piece};
 
-pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)) {
-    let piece = board.squares[from.0][from.1];
+pub fn move_piece(board: &mut Board, from: (usize, usize), to: (usize, usize)) -> Option<(Move)> {
+    // let piece = board.squares[from.0][from.1];
+    let piece:Piece = match board.squares[from.0][from.1] {
+        Some(square_data) => square_data.piece,
+        None => return None, // No piece to move
+    };
+
     let (from_row, from_col) = from;
     let (to_row, to_col) = to;
 
-    let piece_name = match &board.squares[from_row][from_col] {
-        Some(square_data) => match square_data.piece {
-            crate::types::Piece::Pawn => "Pawn".to_string(),
-            crate::types::Piece::Rook => "Rook".to_string(),
-            crate::types::Piece::Knight => "Knight".to_string(),
-            crate::types::Piece::Bishop => "Bishop".to_string(),
-            crate::types::Piece::Queen => "Queen".to_string(),
-            crate::types::Piece::King => "King".to_string(),
-        },
-        None => return,
-    };
-
+    // let piece_name = match &board.squares[from_row][from_col] {
+    //     Some(square_data) => match square_data.piece {
+    //         crate::types::Piece::Pawn => "Pawn".to_string(),
+    //         crate::types::Piece::Rook => "Rook".to_string(),
+    //         crate::types::Piece::Knight => "Knight".to_string(),
+    //         crate::types::Piece::Bishop => "Bishop".to_string(),
+    //         crate::types::Piece::Queen => "Queen".to_string(),
+    //         crate::types::Piece::King => "King".to_string(),
+    //     },
+    //     None => return None,
+    // };
+    
     let completed_move = Move {
         from,
         to,
-        piece_type: piece_name,
+        piece,
     };
 
-    board.history.push(completed_move);
+    // board.history.push(completed_move);
 
     let piece = board.squares[from_row][from_col].take();
     board.squares[to_row][to_col] = piece;
 
     // board.squares[to.0][to.1] = piece;
     // board.squares[from.0][from.1] = None;
+    Some(completed_move)
 }
 
 pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(usize, usize)> {
@@ -62,21 +68,21 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
                 }
             }
 
-            // En passant capture
-            if row == 4 && col > 0 {
-                if let Some(piece) = board.squares[row][col - 1] {
-                    if piece.color == Color::Black {
-                        moves.push((row + 1, col - 1));
-                    }
-                }
-            }
-            if row == 4 && col < 7 {
-                if let Some(piece) = board.squares[row][col + 1] {
-                    if piece.color == Color::Black {
-                        moves.push((row + 1, col + 1));
-                    }
-                }
-            }
+            // // En passant capture
+            // if row == 4 && col > 0 {
+            //     if let Some(piece) = board.squares[row][col - 1] {
+            //         if piece.color == Color::Black {
+            //             moves.push((row + 1, col - 1));
+            //         }
+            //     }
+            // }
+            // if row == 4 && col < 7 {
+            //     if let Some(piece) = board.squares[row][col + 1] {
+            //         if piece.color == Color::Black {
+            //             moves.push((row + 1, col + 1));
+            //         }
+            //     }
+            // }
         }
         Color::Black => {
             if row > 0 && board.squares[row - 1][col].is_none() {
@@ -107,13 +113,13 @@ pub fn pawn_moves(board: &Board, c_pos: (usize, usize), color: Color) -> Vec<(us
                     }
                 }
             }
-            if row == 3 && col < 7 {
-                if let Some(piece) = board.squares[row][col + 1] {
-                    if piece.color == Color::White {
-                        moves.push((row - 1, col + 1));
-                    }
-                }
-            }
+            // if row == 3 && col < 7 {
+            //     if let Some(piece) = board.squares[row][col + 1] {
+            //         if piece.color == Color::White {
+            //             moves.push((row - 1, col + 1));
+            //         }
+            //     }
+            // }
         }
     }
     moves
@@ -290,17 +296,17 @@ pub fn is_square_attacked(board: &Board, square: (usize, usize), color: Color) -
     false
 }
 
-fn find_king(board: &Board, color: Color) -> (usize, usize) {
+fn find_king(board: &Board, color: Color) -> Option<(usize, usize)> {
     for r in 0..8 {
         for c in 0..8 {
             if let Some(p) = board.squares[r][c] {
                 if p.piece == Piece::King && p.color == color {
-                    return (r, c);
+                    return Some((r, c));
                 }
             }
         }
     }
-    (0, 0)
+    None
 }
 
 pub fn legal_moves_for(board: &Board, pos: (usize, usize)) -> Vec<(usize, usize)> {
@@ -332,12 +338,15 @@ pub fn legal_moves_for(board: &Board, pos: (usize, usize)) -> Vec<(usize, usize)
             temp_board.squares[target_pos.0][target_pos.1] = piece;
 
             let king_pos = if piece_on_square.piece == Piece::King {
-                target_pos
+                Some(target_pos)
             } else {
                 find_king(&temp_board, moving_color)
             };
-
-            !is_square_attacked(&temp_board, king_pos, enemy_color)
+            // !is_square_attacked(&temp_board, king_pos, enemy_color)
+            match king_pos {
+                Some(k) => !is_square_attacked(&temp_board, k, enemy_color),
+                None => true,
+            }
         })
-        .collect::<Vec<_>>() 
+        .collect::<Vec<_>>()
 }

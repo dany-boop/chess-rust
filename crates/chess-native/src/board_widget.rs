@@ -1,26 +1,10 @@
 use chess_core::{
     board::{
-        Board, empty_board, place_black_pawns, place_black_pieces, place_white_pawns, place_white_pieces,
-    }, movegen::legal_moves_for, types::Piece::{self, Rook},
+        Board
+    }, types::Piece::{self },
 };
 use eframe::egui::{self, vec2, Rect, Sense};
 
-pub struct BoardStruct {
-    board: Board,
-    selected: Option<(usize, usize)>,
-}
-
-impl Default for BoardStruct {
-    fn default() -> Self {
-        let mut board = empty_board();
-        place_white_pieces(&mut board);
-        place_white_pawns(&mut board);
-        place_black_pawns(&mut board);
-        place_black_pieces(&mut board);
-        let selected: Option<(usize, usize)> = None;
-        BoardStruct { board, selected }
-    }
-}
 
 pub fn draw_board(
     ui: &mut egui::Ui,
@@ -45,7 +29,7 @@ pub fn draw_board(
             };
             
             let square_rect = Rect::from_min_size(
-                ui.min_rect().min + vec2(col as f32 * square_size, row as f32 * square_size),
+                ui.min_rect().min + vec2(col as f32 * square_size, (7-row) as f32 * square_size),
                 vec2(square_size, square_size),
             );
             let response = ui.allocate_rect(square_rect, Sense::click());
@@ -69,8 +53,8 @@ pub fn draw_board(
                     Piece::King => "K",
                 };
                 let text_color = match piece_on_square.color {
-                    chess_core::types::Color::White => egui::Color32::WHITE,
                     chess_core::types::Color::Black => egui::Color32::BLACK,
+                    chess_core::types::Color::White => egui::Color32::WHITE,
                 };
                 ui.painter().text(
                     square_rect.center(),

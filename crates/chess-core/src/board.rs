@@ -1,22 +1,22 @@
 use crate::types::{Color, Piece, PieceOnSquare};
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq,Copy)]
 pub struct Move{
     pub from:(usize,usize),
     pub to:(usize,usize),
-    pub piece_type:String
+    pub piece:Piece   
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Board {
     pub squares: [[Option<PieceOnSquare>; 8]; 8],
-    pub history: Vec<Move>
+    // pub history: Vec<Move>
 }
 
 pub fn empty_board() -> Board {
     Board {
         squares: [[None; 8]; 8],
-        history: Vec::new()
+        // history: Vec::new()
     }
 }
 
